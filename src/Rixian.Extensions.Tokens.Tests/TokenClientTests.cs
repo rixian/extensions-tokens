@@ -49,6 +49,14 @@ public class TokenClientTests
     }
 
     [Fact]
+    public void TokenClient_Instantiate_Success()
+    {
+        ITokenClient tokenClient = this.tokenClientFactory.GetTokenClient();
+
+        tokenClient.Should().NotBeNull();
+    }
+
+    [Fact]
     [Trait("TestCategory", "FailsInCloudTest")]
     public async Task TokenRetrievalWorks()
     {
