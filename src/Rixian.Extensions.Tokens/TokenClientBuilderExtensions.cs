@@ -18,7 +18,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="tokenClientBuilder">The ITokenClientBuilder.</param>
         /// <param name="httpClientName">The name of the HttpClient to pull from the IHttpClientFactory.</param>
         /// <returns>The configured ITokenClientBuilder.</returns>
-        public static ITokenClientBuilder ConfigureHttpClient(this ITokenClientBuilder tokenClientBuilder, string httpClientName)
+        public static ITokenClientBuilder UseHttpClient(this ITokenClientBuilder tokenClientBuilder, string httpClientName)
         {
             if (tokenClientBuilder is null)
             {
@@ -39,7 +39,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="tokenClientBuilder">The ITokenClientBuilder.</param>
         /// <param name="getHttpClient">The delegate for getting the HttpClient instance.</param>
         /// <returns>The configured ITokenClientBuilder.</returns>
-        public static ITokenClientBuilder ConfigureHttpClient(this ITokenClientBuilder tokenClientBuilder, Func<IServiceProvider, HttpClient> getHttpClient)
+        public static ITokenClientBuilder UseHttpClient(this ITokenClientBuilder tokenClientBuilder, Func<IServiceProvider, HttpClient> getHttpClient)
         {
             if (tokenClientBuilder is null)
             {

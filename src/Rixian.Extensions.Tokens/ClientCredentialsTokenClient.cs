@@ -53,7 +53,23 @@ namespace Rixian.Extensions.Tokens
                 if (this.gettingTokenTask == null)
                 {
                     this.gettingTokenTask = new TaskCompletionSource<ITokenInfo>();
-                    Task.Run(this.GetTokenInternalAsync);
+                    Task task = this.GetTokenInternalAsync();
+                    if (!task.IsCanceled && !task.IsFaulted && !task.IsCompleted)
+                    {
+                        try
+                        {
+                            task.Start();
+                        }
+                        finally
+                        {
+                        }
+                    }
+
+                    if (task.Exception != null)
+                    {
+                        // Is there a better way to do this?
+                        throw task.Exception;
+                    }
                 }
 
                 return this.gettingTokenTask.Task;
