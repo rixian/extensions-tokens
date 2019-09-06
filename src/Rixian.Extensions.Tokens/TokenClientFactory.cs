@@ -14,7 +14,6 @@ namespace Rixian.Extensions.Tokens
     /// </summary>
     internal class TokenClientFactory : ITokenClientFactory
     {
-        Guid id = Guid.NewGuid();
         private readonly IServiceProvider services;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly IOptionsMonitor<InternalTokenClientOptions> options;

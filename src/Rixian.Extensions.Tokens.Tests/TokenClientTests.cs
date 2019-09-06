@@ -41,7 +41,7 @@ public class TokenClientTests
                     RequireHttps = false,
                     ValidateIssuerName = false,
                 })
-            .ConfigureHttpClient("tls12");
+            .UseHttpClient("tls12");
 
         IServiceProvider services = serviceCollection.BuildServiceProvider();
 
