@@ -6,6 +6,7 @@ namespace Rixian.Extensions.Tokens
     using System;
     using System.Net.Http;
     using System.Threading.Tasks;
+    using Nito.AsyncEx;
 
     /// <summary>
     /// Token Client used for the Client Credentials grant type.
@@ -16,11 +17,12 @@ namespace Rixian.Extensions.Tokens
         private readonly IHttpClientFactory clientFactory;
         private readonly InternalTokenClientOptions options;
         private readonly object gate = new object();
+        private readonly object getTokenGate = new object();
 
         private ITokenInfo token;
         private DateTimeOffset expiration;
 
-        private TaskCompletionSource<ITokenInfo> gettingTokenTask = null;
+        private AsyncLazy<ITokenInfo> gettingTokenTask = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientCredentialsTokenClient"/> class.
@@ -50,42 +52,19 @@ namespace Rixian.Extensions.Tokens
                     return Task.FromResult(this.token);
                 }
 
-                if (this.gettingTokenTask == null)
+                lock (this.getTokenGate)
                 {
-                    this.gettingTokenTask = new TaskCompletionSource<ITokenInfo>();
-                    Task task = this.GetTokenInternalAsync();
-                    if (!task.IsCanceled && !task.IsFaulted && !task.IsCompleted)
+                    if (this.gettingTokenTask == null)
                     {
-                        try
-                        {
-                            task.Start();
-                        }
-                        finally
-                        {
-                        }
+                        this.gettingTokenTask = new AsyncLazy<ITokenInfo>(() => this.GetTokenInternalAsync());
                     }
 
-                    if (task.Exception != null)
-                    {
-                        // Is there a better way to do this?
-                        throw task.Exception;
-                    }
+                    return this.gettingTokenTask.Task;
                 }
-
-                return this.gettingTokenTask.Task;
             }
         }
 
-        private void HandleException(Exception exception)
-        {
-            this.token = null;
-            this.expiration = DateTimeOffset.MinValue;
-
-            this.gettingTokenTask.SetException(exception);
-            this.gettingTokenTask = null;
-        }
-
-        private async Task GetTokenInternalAsync()
+        private async Task<ITokenInfo> GetTokenInternalAsync()
         {
             try
             {
@@ -94,30 +73,23 @@ namespace Rixian.Extensions.Tokens
 
                 if (response.IsError)
                 {
-                    Exception ex = response.Exception;
-                    if (ex == null)
-                    {
-                        ex = new ArgumentException(response.Error);
-                    }
-
-                    this.HandleException(ex);
-                    return;
+                    throw response.Exception;
                 }
 
                 this.token = TokenHelpers.CreateTokenInfo(response);
                 this.expiration = this.token.Expiration.AddMinutes(-5); // Give ourselves a 5 minute buffer
-
-                lock (this.gate)
+                lock (this.getTokenGate)
                 {
-                    this.gettingTokenTask.SetResult(this.token);
                     this.gettingTokenTask = null;
                 }
+
+                return this.token;
             }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
+            catch
             {
-                this.HandleException(ex);
+                this.token = null;
+                this.expiration = DateTimeOffset.MinValue;
+                throw;
             }
         }
     }
