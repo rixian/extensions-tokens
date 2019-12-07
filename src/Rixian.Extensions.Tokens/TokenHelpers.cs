@@ -61,7 +61,7 @@ namespace Rixian.Extensions.Tokens
         /// <returns>The TokenResponse.</returns>
         public static async Task<TokenResponse> GetClientCredentialsTokenAsync(HttpClient httpClient, string clientId, string clientSecret, string scope, string authority, bool requireHttps = true, bool validateIssuer = true)
         {
-            DiscoveryResponse dr = await httpClient.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
+            DiscoveryDocumentResponse dr = await httpClient.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
             {
                 Address = authority,
                 Policy = new DiscoveryPolicy
