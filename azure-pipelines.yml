@@ -2,59 +2,21 @@ trigger:
   branches:
     include:
     - master
-    - validate/*
-    - release/*
+    - 'validate/*'
+    - 'release/*'
   paths:
     exclude:
     - doc/
     - '*.md'
     - .vscode/
+    - .github/
 
 variables:
   TreatWarningsAsErrors: true
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   BuildConfiguration: Release
-  BuildPlatform: Any CPU
   codecov_token: 04802333-ccec-405f-a010-692b5c5a90c7
-  ci_feed: /e08c98c0-63d6-4dc6-80ca-944e4deaf3d2
+  NUGET_PACKAGES: $(Agent.TempDirectory)/.nuget/packages
 
 jobs:
-- job: Windows
-  pool: Hosted Windows 2019 with VS2019
-  steps:
-  - template: azure-pipelines/install-dependencies.yml
-
-  - powershell: |
-      dotnet tool install --tool-path .. nbgv --ignore-failed-sources
-      ../nbgv cloud
-    displayName: Set build number
-    workingDirectory: src
-
-  - template: azure-pipelines/dotnet.yml
-
-- job: Linux
-  pool:
-    vmImage: Ubuntu 16.04
-  steps:
-  - template: azure-pipelines/install-dependencies.yml
-  - template: azure-pipelines/dotnet.yml
-
-- job: macOS
-  pool:
-    vmImage: macOS 10.13
-  steps:
-  - template: azure-pipelines/install-dependencies.yml
-  - template: azure-pipelines/dotnet.yml
-
-- job: WrapUp
-  dependsOn:
-  - Windows
-  - Linux
-  - macOS
-  pool:
-    vmImage: Ubuntu 16.04
-  condition: succeededOrFailed()
-  steps:
-  - template: azure-pipelines/install-dependencies.yml
-  - template: azure-pipelines/publish-codecoverage.yml
-  - template: azure-pipelines/publish-deployables.yml
+- template: azure-pipelines/build.yml

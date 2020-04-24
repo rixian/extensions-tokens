@@ -7,22 +7,17 @@ namespace Rixian.Extensions.Tokens
     using System.Net.Http;
     using System.Threading.Tasks;
     using Nito.AsyncEx;
+    using Rixian.Extensions.Errors;
+    using static Rixian.Extensions.Errors.Prelude;
 
     /// <summary>
     /// Token Client used for the Client Credentials grant type.
     /// </summary>
-    internal class ClientCredentialsTokenClient : ITokenClient
+    public class ClientCredentialsTokenClient : TokenClientBase
     {
         private readonly IServiceProvider services;
         private readonly IHttpClientFactory clientFactory;
-        private readonly InternalTokenClientOptions options;
-        private readonly object gate = new object();
-        private readonly object getTokenGate = new object();
-
-        private ITokenInfo token;
-        private DateTimeOffset expiration;
-
-        private AsyncLazy<ITokenInfo> gettingTokenTask = null;
+        private readonly ClientCredentialsTokenClientOptions options;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientCredentialsTokenClient"/> class.
@@ -30,7 +25,7 @@ namespace Rixian.Extensions.Tokens
         /// <param name="services">The DI service provider.</param>
         /// <param name="clientFactory">Used for creating clients when refreshing the token.</param>
         /// <param name="options">Options for the client.</param>
-        public ClientCredentialsTokenClient(IServiceProvider services, IHttpClientFactory clientFactory, InternalTokenClientOptions options)
+        public ClientCredentialsTokenClient(IServiceProvider services, IHttpClientFactory clientFactory, ClientCredentialsTokenClientOptions options)
         {
             this.services = services;
             this.clientFactory = clientFactory;
@@ -38,59 +33,17 @@ namespace Rixian.Extensions.Tokens
         }
 
         /// <inheritdoc/>
-        public Task<ITokenInfo> GetTokenAsync(bool forceRefresh = false)
+        protected override async Task<Result<ITokenInfo>> GetTokenCoreAsync()
         {
-            lock (this.gate)
+            HttpClient client = this.options.GetBackchannelHttpClient?.Invoke(this.services) ?? this.clientFactory.CreateClient();
+            IdentityModel.Client.TokenResponse response = await TokenHelpers.GetClientCredentialsTokenAsync(client, this.options).ConfigureAwait(false);
+
+            if (response.IsError)
             {
-                if (forceRefresh)
-                {
-                    this.token = null;
-                }
-
-                if (this.token != null && DateTimeOffset.UtcNow < this.expiration)
-                {
-                    return Task.FromResult(this.token);
-                }
-
-                lock (this.getTokenGate)
-                {
-                    if (this.gettingTokenTask == null)
-                    {
-                        this.gettingTokenTask = new AsyncLazy<ITokenInfo>(() => this.GetTokenInternalAsync());
-                    }
-
-                    return this.gettingTokenTask.Task;
-                }
+                return Error(response.Error, response.ErrorDescription);
             }
-        }
 
-        private async Task<ITokenInfo> GetTokenInternalAsync()
-        {
-            try
-            {
-                HttpClient client = this.options.GetHttpClient?.Invoke(this.services) ?? this.clientFactory.CreateClient();
-                IdentityModel.Client.TokenResponse response = await TokenHelpers.GetClientCredentialsTokenAsync(client, this.options).ConfigureAwait(false);
-
-                if (response.IsError)
-                {
-                    throw response.Exception;
-                }
-
-                this.token = TokenHelpers.CreateTokenInfo(response);
-                this.expiration = this.token.Expiration.AddMinutes(-5); // Give ourselves a 5 minute buffer
-                lock (this.getTokenGate)
-                {
-                    this.gettingTokenTask = null;
-                }
-
-                return this.token;
-            }
-            catch
-            {
-                this.token = null;
-                this.expiration = DateTimeOffset.MinValue;
-                throw;
-            }
+            return Result(TokenHelpers.CreateTokenInfo(response));
         }
     }
 }

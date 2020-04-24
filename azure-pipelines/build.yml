@@ -1,0 +1,48 @@
+jobs:
+- job: Windows
+  pool:
+    vmImage: windows-latest
+  steps:
+  - checkout: self
+    clean: true
+  - template: install-dependencies.yml
+
+  - powershell: '& (./azure-pipelines/Get-nbgv.ps1) cloud'
+    displayName: Set build number
+
+  - template: dotnet.yml
+
+- job: Linux
+  pool:
+    vmImage: ubuntu-latest
+  steps:
+  - checkout: self
+    clean: true
+  - template: install-dependencies.yml
+  - template: dotnet.yml
+
+- job: macOS
+  pool:
+    vmImage: macos-latest
+  steps:
+  - checkout: self
+    clean: true
+  - template: install-dependencies.yml
+  - template: dotnet.yml
+
+- job: WrapUp
+  dependsOn:
+  - Windows
+  - Linux
+  - macOS
+  pool:
+    vmImage: ubuntu-latest
+  condition: succeededOrFailed()
+  steps:
+  - checkout: self
+    clean: true
+  - template: install-dependencies.yml
+    parameters:
+      initArgs: -NoRestore
+  - template: publish-codecoverage.yml
+  - template: publish-deployables.yml

@@ -7,6 +7,11 @@ FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com)
 with any additional questions or comments.
 
+## Best practices
+
+* Use Windows PowerShell or [PowerShell Core][pwsh] (including on Linux/OSX) to run .ps1 scripts.
+  Some scripts set environment variables to help you, but they are only retained if you use PowerShell as your shell.
+
 ## Prerequisites
 
 The only prerequisite for building, testing, and deploying from this repository
@@ -21,6 +26,12 @@ All dependencies can be installed by running the `init.ps1` script at the root o
 using Windows PowerShell or [PowerShell Core][pwsh] (on any OS).
 
 This repository can be built on Windows, Linux, and OSX.
+
+## Package restore
+
+The easiest way to restore packages may be to run `init.ps1` which automatically authenticates
+to the feeds that packages for this repo come from, if any.
+`dotnet restore` or `nuget restore` also work but may require extra steps to authenticate to any applicable feeds.
 
 ## Building
 

@@ -4,6 +4,7 @@
 namespace Rixian.Extensions.Tokens
 {
     using System.Threading.Tasks;
+    using Rixian.Extensions.Errors;
 
     /// <summary>
     /// Client interface for retrieving tokens.
@@ -15,6 +16,6 @@ namespace Rixian.Extensions.Tokens
         /// </summary>
         /// <param name="forceRefresh">Forces a clean token if the client uses caching.</param>
         /// <returns>An instance of an <see cref="ITokenInfo"/>.</returns>
-        Task<ITokenInfo> GetTokenAsync(bool forceRefresh = false);
+        Task<Result<ITokenInfo>> GetTokenAsync(bool forceRefresh);
     }
 }

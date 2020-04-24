@@ -13,22 +13,22 @@ namespace Rixian.Extensions.Tokens
         /// <summary>
         /// Gets the access token.
         /// </summary>
-        string AccessToken { get; }
+        string? AccessToken { get; }
 
         /// <summary>
         /// Gets the identity token.
         /// </summary>
-        string IdentityToken { get; }
+        string? IdentityToken { get; }
 
         /// <summary>
         /// Gets the token type.
         /// </summary>
-        string TokenType { get; }
+        string? TokenType { get; }
 
         /// <summary>
         /// Gets the refresh token.
         /// </summary>
-        string RefreshToken { get; }
+        string? RefreshToken { get; }
 
         /// <summary>
         /// Gets the token expiration as a point in time.

@@ -10,19 +10,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Rixian.Extensions.Errors;
 using Rixian.Extensions.Tokens;
 using Xunit;
-using Xunit.Abstractions;
 
 public class TokenClientTests
 {
-    private readonly ITestOutputHelper logger;
     private readonly ITokenClientFactory tokenClientFactory;
 
-    public TokenClientTests(ITestOutputHelper logger)
+    public TokenClientTests()
     {
-        this.logger = logger;
-
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddHttpClient("tls12")
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
@@ -31,8 +28,8 @@ public class TokenClientTests
             });
 
         serviceCollection
-            .AddTokenClient(
-                new TokenClientOptions
+            .AddClientCredentialsTokenClient(
+                new ClientCredentialsTokenClientOptions
                 {
                     ClientId = "REPLACE_ME",
                     ClientSecret = "REPLACE_ME",
@@ -41,7 +38,7 @@ public class TokenClientTests
                     RequireHttps = false,
                     ValidateIssuerName = false,
                 })
-            .UseHttpClient("tls12");
+            .UseHttpClientForBackchannel("tls12");
 
         IServiceProvider services = serviceCollection.BuildServiceProvider();
 
@@ -51,7 +48,8 @@ public class TokenClientTests
     [Fact]
     public void TokenClient_Instantiate_Success()
     {
-        ITokenClient tokenClient = this.tokenClientFactory.GetTokenClient();
+        Result<ITokenClient> tokenClientResult = this.tokenClientFactory.GetTokenClient();
+        ITokenClient tokenClient = tokenClientResult.Value;
 
         tokenClient.Should().NotBeNull();
     }
@@ -60,25 +58,32 @@ public class TokenClientTests
     [Trait("TestCategory", "FailsInCloudTest")]
     public async Task TokenRetrievalWorks()
     {
-        ITokenClient tokenClient = this.tokenClientFactory.GetTokenClient();
-        ITokenInfo token = await tokenClient.GetTokenAsync().ConfigureAwait(false);
-        token.Should().NotBeNull();
-        token.AccessToken.Should().NotBeNull();
+        Result<ITokenClient> tokenClientResult = this.tokenClientFactory.GetTokenClient();
+        ITokenClient tokenClient = tokenClientResult.Value;
+        Result<ITokenInfo> token = await tokenClient.GetTokenAsync().ConfigureAwait(false);
+        token.IsSuccess.Should().BeTrue();
+        token.Value.Should().NotBeNull();
+        token.Value.AccessToken.Should().NotBeNull();
     }
 
     [Fact]
     [Trait("TestCategory", "FailsInCloudTest")]
     public async Task MultipleCallSameTokenTest()
     {
-        ITokenClient tokenClient = this.tokenClientFactory.GetTokenClient();
-        ITokenInfo token1 = await tokenClient.GetTokenAsync().ConfigureAwait(false);
-        ITokenInfo token2 = await tokenClient.GetTokenAsync().ConfigureAwait(false);
-        token1.Should().NotBeNull();
-        token1.AccessToken.Should().NotBeNull();
-        token2.Should().NotBeNull();
-        token2.AccessToken.Should().NotBeNull();
-        token1.AccessToken.Should().Be(token2.AccessToken);
-        token1.Should().Be(token2);
+        Result<ITokenClient> tokenClientResult = this.tokenClientFactory.GetTokenClient();
+        ITokenClient tokenClient = tokenClientResult.Value;
+        Result<ITokenInfo> token1 = await tokenClient.GetTokenAsync().ConfigureAwait(false);
+        Result<ITokenInfo> token2 = await tokenClient.GetTokenAsync().ConfigureAwait(false);
+
+        token1.IsSuccess.Should().BeTrue();
+        token1.Value.Should().NotBeNull();
+        token1.Value.AccessToken.Should().NotBeNull();
+
+        token2.IsSuccess.Should().BeTrue();
+        token2.Value.Should().NotBeNull();
+        token2.Value.AccessToken.Should().NotBeNull();
+        token1.Value.AccessToken.Should().Be(token2.Value.AccessToken);
+        token1.Value.Should().Be(token2.Value);
     }
 
     /// <summary>
@@ -112,15 +117,15 @@ public class TokenClientTests
     [Trait("TestCategory", "FailsInCloudTest")]
     public async Task ThreadSafetyTest(int count)
     {
-        var tasks = new List<Task<ITokenInfo>>();
+        var tasks = new List<Task<Result<ITokenInfo>>>();
         using (var resetEvent = new ManualResetEvent(false))
         {
-            ITokenClient tokenClient = this.tokenClientFactory.GetTokenClient();
+            Result<ITokenClient> tokenClientResult = this.tokenClientFactory.GetTokenClient();
 
-            async Task<ITokenInfo> GetTokenAsync()
+            async Task<Result<ITokenInfo>> GetTokenAsync()
             {
                 resetEvent.WaitOne();
-                return await tokenClient.GetTokenAsync().ConfigureAwait(false);
+                return await tokenClientResult.Value.GetTokenAsync().ConfigureAwait(false);
             }
 
             for (int i = 0; i < count; i++)
@@ -130,8 +135,9 @@ public class TokenClientTests
 
             resetEvent.Set();
 
-            ITokenInfo[] results = await Task.WhenAll(tasks).ConfigureAwait(false);
-            results.Select(ti => ti.AccessToken).Distinct().Should().HaveCount(1);
+            Result<ITokenInfo>[] results = await Task.WhenAll(tasks).ConfigureAwait(false);
+            results.All(r => r.IsSuccess).Should().BeTrue();
+            results.Select(ti => ti.Value.AccessToken).Distinct().Should().HaveCount(1);
         }
     }
 }

@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29102.190
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rixian.Extensions.Tokens", "Rixian.Extensions.Tokens\Rixian.Extensions.Tokens.csproj", "{6313664B-D837-4E4E-BD98-6C9AD7AE8060}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rixian.Extensions.Tokens", "src\Rixian.Extensions.Tokens\Rixian.Extensions.Tokens.csproj", "{6313664B-D837-4E4E-BD98-6C9AD7AE8060}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rixian.Extensions.Tokens.Tests", "Rixian.Extensions.Tokens.Tests\Rixian.Extensions.Tokens.Tests.csproj", "{1DE50806-6834-46B9-81E5-33E09E36F433}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rixian.Extensions.Tokens.Tests", "test\Rixian.Extensions.Tokens.Tests\Rixian.Extensions.Tokens.Tests.csproj", "{1DE50806-6834-46B9-81E5-33E09E36F433}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rixian.Extensions.Tokens.Abstractions", "Rixian.Extensions.Tokens.Abstractions\Rixian.Extensions.Tokens.Abstractions.csproj", "{010FADC1-D619-4438-BFDD-29023661E86E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rixian.Extensions.Tokens.Abstractions", "src\Rixian.Extensions.Tokens.Abstractions\Rixian.Extensions.Tokens.Abstractions.csproj", "{010FADC1-D619-4438-BFDD-29023661E86E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

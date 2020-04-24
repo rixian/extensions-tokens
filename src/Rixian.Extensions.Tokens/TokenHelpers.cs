@@ -4,6 +4,7 @@
 namespace Rixian.Extensions.Tokens
 {
     using System;
+    using System.Globalization;
     using System.Net.Http;
     using System.Threading.Tasks;
     using IdentityModel.Client;
@@ -11,7 +12,7 @@ namespace Rixian.Extensions.Tokens
     /// <summary>
     /// Helper methods for getting tokens.
     /// </summary>
-    internal static class TokenHelpers
+    public static class TokenHelpers
     {
         /// <summary>
         /// Transforms a TokenResponse into an <see cref="ITokenInfo"/>.
@@ -20,6 +21,11 @@ namespace Rixian.Extensions.Tokens
         /// <returns>The ITokenInfo.</returns>
         public static ITokenInfo CreateTokenInfo(TokenResponse response)
         {
+            if (response is null)
+            {
+                throw new ArgumentNullException(nameof(response));
+            }
+
             return new TokenInfo
             {
                 AccessToken = response.AccessToken,
@@ -36,17 +42,67 @@ namespace Rixian.Extensions.Tokens
         /// <param name="httpClient">The HttpClient to use.</param>
         /// <param name="options">The options for retrieving the token.</param>
         /// <returns>The TokenResponse.</returns>
-        public static Task<TokenResponse> GetClientCredentialsTokenAsync(HttpClient httpClient, InternalTokenClientOptions options) =>
-            GetClientCredentialsTokenAsync(httpClient, options.ClientId, options.ClientSecret, options.Scope, options.Authority, options.RequireHttps, options.ValidateIssuerName);
+        public static async Task<TokenResponse> GetClientCredentialsTokenAsync(HttpClient httpClient, ClientCredentialsTokenClientOptions options)
+        {
+            if (options is null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
+            if (options.ClientId == null)
+            {
+                throw new ArgumentOutOfRangeException(nameof(options), string.Format(CultureInfo.InvariantCulture, Properties.Resources.PropertyMustNotBeNullErrorMessage, nameof(options.ClientId)));
+            }
+
+            if (options.ClientSecret == null)
+            {
+                throw new ArgumentOutOfRangeException(nameof(options), string.Format(CultureInfo.InvariantCulture, Properties.Resources.PropertyMustNotBeNullErrorMessage, nameof(options.ClientSecret)));
+            }
+
+            if (options.Authority == null)
+            {
+                throw new ArgumentOutOfRangeException(nameof(options), string.Format(CultureInfo.InvariantCulture, Properties.Resources.PropertyMustNotBeNullErrorMessage, nameof(options.Authority)));
+            }
+
+            return await GetClientCredentialsTokenAsync(httpClient, options.ClientId, options.ClientSecret, options.Scope, options.Authority, options.RequireHttps, options.ValidateIssuerName).ConfigureAwait(false);
+        }
 
         /// <summary>
         /// Gets a token using the client_credentials grant.
         /// </summary>
         /// <param name="httpClient">The HttpClient to use.</param>
-        /// <param name="options">The options for retrieving the token.</param>
+        /// <param name="clientId">The clientId.</param>
+        /// <param name="clientSecret">The clientSecret.</param>
+        /// <param name="scope">The scope.</param>
+        /// <param name="authority">The authority.</param>
         /// <returns>The TokenResponse.</returns>
-        public static Task<TokenResponse> GetClientCredentialsTokenAsync(HttpClient httpClient, TokenClientOptions options) =>
-            GetClientCredentialsTokenAsync(httpClient, options.ClientId, options.ClientSecret, options.Scope, options.Authority, options.RequireHttps, options.ValidateIssuerName);
+        public static async Task<TokenResponse> GetClientCredentialsTokenAsync(HttpClient httpClient, string clientId, string clientSecret, string? scope, string authority)
+        {
+            DiscoveryDocumentResponse dr = await httpClient.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
+            {
+                Address = authority,
+                Policy = new DiscoveryPolicy
+                {
+                    RequireHttps = true,
+                    ValidateIssuerName = true,
+                },
+            }).ConfigureAwait(false);
+
+            if (dr.IsError)
+            {
+                throw dr.Exception;
+            }
+
+            TokenResponse response = await httpClient.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
+            {
+                Address = dr.TokenEndpoint,
+                ClientId = clientId,
+                ClientSecret = clientSecret,
+                Scope = scope,
+            }).ConfigureAwait(false);
+
+            return response;
+        }
 
         /// <summary>
         /// Gets a token using the client_credentials grant.
@@ -59,7 +115,7 @@ namespace Rixian.Extensions.Tokens
         /// <param name="requireHttps">The requireHttps flag.</param>
         /// <param name="validateIssuer">The validateIssuer flag.</param>
         /// <returns>The TokenResponse.</returns>
-        public static async Task<TokenResponse> GetClientCredentialsTokenAsync(HttpClient httpClient, string clientId, string clientSecret, string scope, string authority, bool requireHttps = true, bool validateIssuer = true)
+        public static async Task<TokenResponse> GetClientCredentialsTokenAsync(HttpClient httpClient, string clientId, string clientSecret, string? scope, string authority, bool requireHttps, bool validateIssuer)
         {
             DiscoveryDocumentResponse dr = await httpClient.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
             {

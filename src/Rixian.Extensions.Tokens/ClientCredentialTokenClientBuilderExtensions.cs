@@ -10,7 +10,7 @@ namespace Microsoft.Extensions.DependencyInjection
     /// <summary>
     /// Extension methods for the ITokenClientBuilder interface.
     /// </summary>
-    public static class TokenClientBuilderExtensions
+    public static class ClientCredentialTokenClientBuilderExtensions
     {
         /// <summary>
         /// Configures the logical token client with a custom method for getting the HttpClient.
@@ -18,16 +18,16 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="tokenClientBuilder">The ITokenClientBuilder.</param>
         /// <param name="httpClientName">The name of the HttpClient to pull from the IHttpClientFactory.</param>
         /// <returns>The configured ITokenClientBuilder.</returns>
-        public static ITokenClientBuilder UseHttpClient(this ITokenClientBuilder tokenClientBuilder, string httpClientName)
+        public static IClientCredentialTokenClientBuilder UseHttpClientForBackchannel(this IClientCredentialTokenClientBuilder tokenClientBuilder, string httpClientName)
         {
             if (tokenClientBuilder is null)
             {
                 throw new ArgumentNullException(nameof(tokenClientBuilder));
             }
 
-            tokenClientBuilder.Services.Configure<InternalTokenClientOptions>(tokenClientBuilder.Name, o =>
+            tokenClientBuilder.Services.Configure<ClientCredentialsTokenClientOptions>(tokenClientBuilder.Name, o =>
             {
-                o.GetHttpClient = svc => svc.GetRequiredService<IHttpClientFactory>().CreateClient(httpClientName);
+                o.GetBackchannelHttpClient = svc => svc.GetRequiredService<IHttpClientFactory>().CreateClient(httpClientName);
             });
 
             return tokenClientBuilder;
@@ -39,7 +39,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="tokenClientBuilder">The ITokenClientBuilder.</param>
         /// <param name="getHttpClient">The delegate for getting the HttpClient instance.</param>
         /// <returns>The configured ITokenClientBuilder.</returns>
-        public static ITokenClientBuilder UseHttpClient(this ITokenClientBuilder tokenClientBuilder, Func<IServiceProvider, HttpClient> getHttpClient)
+        public static IClientCredentialTokenClientBuilder UseHttpClientForBackchannel(this IClientCredentialTokenClientBuilder tokenClientBuilder, Func<IServiceProvider, HttpClient> getHttpClient)
         {
             if (tokenClientBuilder is null)
             {
@@ -51,9 +51,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(getHttpClient));
             }
 
-            tokenClientBuilder.Services.Configure<InternalTokenClientOptions>(tokenClientBuilder.Name, o =>
+            tokenClientBuilder.Services.Configure<ClientCredentialsTokenClientOptions>(tokenClientBuilder.Name, o =>
             {
-                o.GetHttpClient = getHttpClient;
+                o.GetBackchannelHttpClient = getHttpClient;
             });
 
             return tokenClientBuilder;
