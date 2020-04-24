@@ -17,8 +17,6 @@ namespace Rixian.Extensions.Tokens
     /// </summary>
     internal class ClientCredentialTokenClientFactory : GenericFactory<ClientCredentialsTokenClientOptions, ClientCredentialsTokenClient>, ITokenClientFactory
     {
-        private readonly IOptionsMonitor<ClientCredentialsTokenClientOptions> options;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientCredentialTokenClientFactory"/> class.
         /// </summary>
@@ -28,7 +26,6 @@ namespace Rixian.Extensions.Tokens
         public ClientCredentialTokenClientFactory(IServiceProvider services, IOptionsMonitor<ClientCredentialsTokenClientOptions> options, IOptions<GenericFactoryOptions<ClientCredentialsTokenClientOptions, ClientCredentialsTokenClient>> factoryOptions)
             : base(services, options, factoryOptions)
         {
-            this.options = options;
         }
 
         /// <inheritdoc/>

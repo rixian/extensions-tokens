@@ -10,21 +10,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Rixian.Extensions.DependencyInjection;
 using Rixian.Extensions.Errors;
 using Rixian.Extensions.Tokens;
 using Xunit;
-using Xunit.Abstractions;
 
 public class TokenClientTests
 {
-    private readonly ITestOutputHelper logger;
     private readonly ITokenClientFactory tokenClientFactory;
 
-    public TokenClientTests(ITestOutputHelper logger)
+    public TokenClientTests()
     {
-        this.logger = logger;
-
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddHttpClient("tls12")
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
@@ -126,12 +121,11 @@ public class TokenClientTests
         using (var resetEvent = new ManualResetEvent(false))
         {
             Result<ITokenClient> tokenClientResult = this.tokenClientFactory.GetTokenClient();
-            ITokenClient tokenClient = tokenClientResult.Value;
 
             async Task<Result<ITokenInfo>> GetTokenAsync()
             {
                 resetEvent.WaitOne();
-                return await tokenClient.GetTokenAsync().ConfigureAwait(false);
+                return await tokenClientResult.Value.GetTokenAsync().ConfigureAwait(false);
             }
 
             for (int i = 0; i < count; i++)

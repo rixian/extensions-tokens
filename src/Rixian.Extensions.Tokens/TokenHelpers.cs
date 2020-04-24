@@ -75,10 +75,47 @@ namespace Rixian.Extensions.Tokens
         /// <param name="clientSecret">The clientSecret.</param>
         /// <param name="scope">The scope.</param>
         /// <param name="authority">The authority.</param>
+        /// <returns>The TokenResponse.</returns>
+        public static async Task<TokenResponse> GetClientCredentialsTokenAsync(HttpClient httpClient, string clientId, string clientSecret, string? scope, string authority)
+        {
+            DiscoveryDocumentResponse dr = await httpClient.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
+            {
+                Address = authority,
+                Policy = new DiscoveryPolicy
+                {
+                    RequireHttps = true,
+                    ValidateIssuerName = true,
+                },
+            }).ConfigureAwait(false);
+
+            if (dr.IsError)
+            {
+                throw dr.Exception;
+            }
+
+            TokenResponse response = await httpClient.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
+            {
+                Address = dr.TokenEndpoint,
+                ClientId = clientId,
+                ClientSecret = clientSecret,
+                Scope = scope,
+            }).ConfigureAwait(false);
+
+            return response;
+        }
+
+        /// <summary>
+        /// Gets a token using the client_credentials grant.
+        /// </summary>
+        /// <param name="httpClient">The HttpClient to use.</param>
+        /// <param name="clientId">The clientId.</param>
+        /// <param name="clientSecret">The clientSecret.</param>
+        /// <param name="scope">The scope.</param>
+        /// <param name="authority">The authority.</param>
         /// <param name="requireHttps">The requireHttps flag.</param>
         /// <param name="validateIssuer">The validateIssuer flag.</param>
         /// <returns>The TokenResponse.</returns>
-        public static async Task<TokenResponse> GetClientCredentialsTokenAsync(HttpClient httpClient, string clientId, string clientSecret, string? scope, string authority, bool requireHttps = true, bool validateIssuer = true)
+        public static async Task<TokenResponse> GetClientCredentialsTokenAsync(HttpClient httpClient, string clientId, string clientSecret, string? scope, string authority, bool requireHttps, bool validateIssuer)
         {
             DiscoveryDocumentResponse dr = await httpClient.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
             {
