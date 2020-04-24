@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Rixian.Extensions.Tokens\Rixian.Extensions.Tokens.csproj" />
+  </ItemGroup>
+
+</Project>

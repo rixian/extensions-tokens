@@ -72,6 +72,7 @@ StyleCopReport.xml
 *.pgc
 *.pgd
 *.rsp
+!Directory.Build.rsp
 *.sbr
 *.tlb
 *.tli
@@ -342,3 +343,6 @@ healthchecksdb
 
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
+
+# dotnet tool local install directory
+.store/

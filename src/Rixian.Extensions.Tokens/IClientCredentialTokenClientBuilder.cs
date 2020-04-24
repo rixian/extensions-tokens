@@ -3,19 +3,17 @@
 
 namespace Microsoft.Extensions.DependencyInjection
 {
+    using Rixian.Extensions.DependencyInjection;
+    using Rixian.Extensions.Tokens;
+
     /// <summary>
     /// Provides basic functionality for configuring an ITokenClient.
     /// </summary>
-    public interface ITokenClientBuilder
+    public interface IClientCredentialTokenClientBuilder : IFactoryItemBuilder<ClientCredentialsTokenClientOptions, ClientCredentialsTokenClient>
     {
         /// <summary>
-        /// Gets the logical name of this ITokenClient.
+        /// Gets the name of the TokenClientBuilder.
         /// </summary>
-        string Name { get; }
-
-        /// <summary>
-        /// Gets the DI services currently configured.
-        /// </summary>
-        IServiceCollection Services { get; }
+        public string Name { get; }
     }
 }

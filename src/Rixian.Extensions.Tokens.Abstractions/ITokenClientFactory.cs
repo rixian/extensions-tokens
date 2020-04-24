@@ -3,6 +3,8 @@
 
 namespace Rixian.Extensions.Tokens
 {
+    using Rixian.Extensions.Errors;
+
     /// <summary>
     /// A factory that can create ITokenClient instances.
     /// </summary>
@@ -13,6 +15,6 @@ namespace Rixian.Extensions.Tokens
         /// </summary>
         /// <param name="name">The logical name of the ITokenClient to create.</param>
         /// <returns>An instance of an ITokenClient.</returns>
-        ITokenClient GetTokenClient(string name);
+        Result<ITokenClient> GetTokenClient(string name);
     }
 }

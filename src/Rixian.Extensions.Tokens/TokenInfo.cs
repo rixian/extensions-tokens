@@ -11,16 +11,16 @@ namespace Rixian.Extensions.Tokens
     internal class TokenInfo : ITokenInfo
     {
         /// <inheritdoc/>
-        public string AccessToken { get; set; }
+        public string? AccessToken { get; set; }
 
         /// <inheritdoc/>
-        public string IdentityToken { get; set; }
+        public string? IdentityToken { get; set; }
 
         /// <inheritdoc/>
-        public string TokenType { get; set; }
+        public string? TokenType { get; set; }
 
         /// <inheritdoc/>
-        public string RefreshToken { get; set; }
+        public string? RefreshToken { get; set; }
 
         /// <inheritdoc/>
         public DateTimeOffset Expiration { get; set; }
