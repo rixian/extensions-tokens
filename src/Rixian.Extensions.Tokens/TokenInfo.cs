@@ -8,7 +8,7 @@ namespace Rixian.Extensions.Tokens
     /// <summary>
     /// An object that represents a token.
     /// </summary>
-    internal class TokenInfo : ITokenInfo
+    public class TokenInfo : ITokenInfo
     {
         /// <inheritdoc/>
         public string? AccessToken { get; set; }
