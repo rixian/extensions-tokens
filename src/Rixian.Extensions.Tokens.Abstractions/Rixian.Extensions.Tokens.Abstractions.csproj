@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Rixian.Extensions.Errors" Version="1.0.1" />
+    <PackageReference Include="Rixian.Extensions.Errors" Version="2.0.7" />
   </ItemGroup>
 
 </Project>
